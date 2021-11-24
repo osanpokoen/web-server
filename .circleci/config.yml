@@ -1,0 +1,41 @@
+version: 2.1
+orbs:
+  aws-ecr: circleci/aws-ecr@7.3.0
+executors:
+  amd:
+    machine:
+      image: 'ubuntu-2004:202101-01'
+    resource_class: medium
+  arm:
+    machine:
+      image: 'ubuntu-2004:202101-01'
+    resource_class: arm.medium
+params: &params
+  dockerfile: release/Dockerfile
+  repo: web-server
+  skip-when-tags-exist: false
+filter: &filter
+  filters:
+    branches:
+      only: main
+jobs:
+  build-amd64:
+    executor: amd
+    steps:
+      - aws-ecr/build-and-push-image:
+          <<: *params
+          tag: amd64
+  build-arm64:
+    executor: arm
+    steps:
+      - aws-ecr/build-and-push-image:
+          <<: *params
+          tag: arm64
+workflows:
+  version: 2.1
+  build:
+    jobs:
+      - build-amd64:
+          <<: *filter
+      - build-arm64:
+          <<: *filter
